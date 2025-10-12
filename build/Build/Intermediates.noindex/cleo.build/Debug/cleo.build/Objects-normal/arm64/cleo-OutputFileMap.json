@@ -1,0 +1,38 @@
+{
+  "" : {
+    "diagnostics" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleo-master.dia",
+    "emit-module-dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleo-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleo-master-emit-module.dia",
+    "swift-dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleo-master.swiftdeps"
+  },
+  "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Users/jacobfu/src/cleo/cleo/OverlayView.swift" : {
+    "const-values" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.swiftconstvalues",
+    "dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.d",
+    "diagnostics" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.dia",
+    "index-unit-output-path" : "/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.o",
+    "llvm-bc" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.bc",
+    "object" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.o",
+    "swift-dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView.swiftdeps",
+    "swiftmodule" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/OverlayView~partial.swiftmodule"
+  },
+  "/Users/jacobfu/src/cleo/cleo/cleoApp.swift" : {
+    "const-values" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.swiftconstvalues",
+    "dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.d",
+    "diagnostics" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.dia",
+    "index-unit-output-path" : "/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.o",
+    "llvm-bc" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.bc",
+    "object" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.o",
+    "swift-dependencies" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp.swiftdeps",
+    "swiftmodule" : "/Users/jacobfu/src/cleo/build/Build/Intermediates.noindex/cleo.build/Debug/cleo.build/Objects-normal/arm64/cleoApp~partial.swiftmodule"
+  }
+}

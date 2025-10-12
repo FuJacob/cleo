@@ -32,44 +32,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
+
         if let button = statusItem?.button {
-            
+
             button.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Meet Cleo.")
-            
-            
+
+
             button.action = #selector(statusBarButtonClicked)
-            
-            setupKeyboardMonitor()
-            
-            checkAccessibilityPermissions()
+
+            checkAndRequestPermissions()
         }
     }
     
     @objc func statusBarButtonClicked() {
-        
         let alert = NSAlert()
-        alert.messageText = "Hello, World!"
-        alert.informativeText = "Select some text, and press Fn"
-        alert.addButton(withTitle: "OKAY")
-        alert.runModal( )
+        alert.messageText = "Cleo - AI Text Analysis"
+        alert.informativeText = "Select some text, and press Cmd+Shift+E to analyze it."
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
     
     
+    // This function checks and requests all necessary permissions
+    func checkAndRequestPermissions() {
+        checkAccessibilityPermissions()
+        setupKeyboardMonitor()
+    }
+
     // This function checks if we have accessibility permissions
-    // We need this permission to read selected text from other apps
     func checkAccessibilityPermissions() {
-        // NSDictionary is a key-value collection (like a dictionary)
-        // kAXTrustedCheckOptionPrompt tells macOS to show a permission dialog
-        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
-        
-        // Check if we have accessibility access
-        let accessEnabled = AXIsProcessTrustedWithOptions(options)
-        
-        // If we don't have access, print a message
-        // (macOS will automatically show a dialog asking for permission)
+        let accessEnabled = AXIsProcessTrusted()
+
         if !accessEnabled {
-            print("Accessibility permissions not granted")
+            print("Requesting accessibility permissions...")
+            // Show the permission dialog
+            let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
+            let _ = AXIsProcessTrustedWithOptions(options)
+        } else {
+            print("Accessibility permissions granted")
         }
     }
     
@@ -85,7 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             // Check if Command + Shift keys are held down
             // AND if the E key (keyCode 14) was pressed
-            if event.modifierFlags.contains([.function, .shift]) {
+            if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 14 {
                 // If both conditions are true, call our handleShortcut function
                 self?.handleShortcut()
             }
@@ -166,11 +166,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Close any existing overlay window first
         // This ensures we only have one overlay at a time
         overlayWindow?.close()
-        
+        overlayWindow = nil
+
         // Create our SwiftUI view for the overlay
         // onClose is a callback that will be called when user clicks the X button
         let overlayView = OverlayView(selectedText: text) { [weak self] in
-            self?.overlayWindow?.close() // Close the window when X is clicked
+            DispatchQueue.main.async {
+                self?.overlayWindow?.close()
+                self?.overlayWindow = nil
+            }
         }
         
         // NSHostingView wraps a SwiftUI view so it can be used in an NSWindow
@@ -193,16 +197,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         overlayWindow?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary] // Show on all desktops
         
         // Center the window on the screen
-        if let screen = NSScreen.main { // Get the main screen
+        if let screen = NSScreen.main, let window = overlayWindow {
             let screenRect = screen.visibleFrame // Get the visible area (excluding menu bar)
-            let windowRect = overlayWindow!.frame // Get our window's size
-            
+            let windowRect = window.frame // Get our window's size
+
             // Calculate center position
             let x = screenRect.midX - windowRect.width / 2
             let y = screenRect.midY - windowRect.height / 2
-            
+
             // Move the window to the center
-            overlayWindow?.setFrameOrigin(NSPoint(x: x, y: y))
+            window.setFrameOrigin(NSPoint(x: x, y: y))
         }
         
         // Show the window

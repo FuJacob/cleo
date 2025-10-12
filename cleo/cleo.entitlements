@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>This app needs access to read selected text from other applications.</string>
-	<key>NSAccessibilityUsageDescription</key>
-	<string>This app needs accessibility access to monitor keyboard shortcuts.</string>
-	<key>com.apple.security.app-sandbox</key>
-	<true/>
-	<key>com.apple.security.files.user-selected.read-only</key>
-	<true/>
-</dict>
+    <dict>
+        <!-- App Sandbox enables security restrictions -->
+        <key>com.apple.security.app-sandbox</key>
+        <true/>
+        
+        <!-- Allow network connections (needed for AI API calls) -->
+        <key>com.apple.security.network.client</key>
+        <true/>
+        
+        <!-- Allow sending Apple Events to other apps (needed to read selected text) -->
+        <key>com.apple.security.automation.apple-events</key>
+        <true/>
+        
+        <!-- Allow temporary exception for AppleEvents (for development/testing) -->
+        <key>com.apple.security.temporary-exception.apple-events</key>
+        <array>
+            <string>com.apple.systemevents</string>
+        </array>
+
+        <!-- Allow input monitoring (needed for global keyboard shortcuts) -->
+        <key>com.apple.security.device.input-monitoring</key>
+        <true/>
+    </dict>
 </plist>

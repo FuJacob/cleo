@@ -99,15 +99,37 @@ struct OverlayView: View {
     // This function "fetches" the explanation from AI
     // Right now it's fake - we'll add real AI in the next step
     func fetchExplanation() {
+        
+        let service = OllamaService()
         // DispatchQueue.main.asyncAfter runs code after a delay
         // .now() + 1.5 means wait 1.5 seconds
         // This simulates waiting for an AI response
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // After 1.5 seconds, update the explanation
-            explanation = "This is a placeholder explanation. We'll connect to an AI API in the next step!\n\nYour selected text was: '\(selectedText)'"
-            
-            // Set loading to false so the UI updates
-            isLoading = false
+        
+        
+        Task {
+            do {
+                let result = try await service.explainText(selectedText)
+                
+                await MainActor.run {
+                    self.explanation = result
+                    self.isLoading = false
+                }
+            }
+            catch {
+                await MainActor.run {
+                    self.explanation = """
+                                        Error: \(error.localizedDescription)
+                                        
+                                        Troubleshooting:
+                                        • Make sure Ollama is running (check menu bar)
+                                        • Try running: ollama serve
+                                        • Check if model is installed: ollama list
+                                        • Pull the model: ollama pull \(Config.model)
+                                        """
+                    self.isLoading = false
+                }
+                print("❌ Error fetching explanation: \(error)")
+                
+            }
         }
-    }
-}
+    }}
