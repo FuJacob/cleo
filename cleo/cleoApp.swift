@@ -17,9 +17,6 @@ struct cleoApp: App {
             EmptyView()
         }
     }
-    
-    
-    
 }
 
 
@@ -41,6 +38,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(statusBarButtonClicked)
 
             checkAndRequestPermissions()
+        }
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        // Clean up resources before app terminates
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        
+        if let window = overlayWindow {
+            window.orderOut(nil)
+            window.contentView = nil
+            window.close()
+            overlayWindow = nil
         }
     }
     
@@ -163,54 +175,77 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // This function shows the overlay window with the explanation
     func showOverlay(with text: String) {
-        // Close any existing overlay window first
-        // This ensures we only have one overlay at a time
-        overlayWindow?.close()
-        overlayWindow = nil
-
+        // Ensure we're on the main thread for all UI operations
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Close any existing overlay window first
+            if let existingWindow = self.overlayWindow {
+                existingWindow.orderOut(nil)  // Hide window first
+                existingWindow.contentView = nil  // Clear content view
+                existingWindow.close()  // Then close
+                self.overlayWindow = nil
+                
+                // Small delay to ensure proper cleanup
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.createAndShowOverlay(with: text)
+                }
+            } else {
+                self.createAndShowOverlay(with: text)
+            }
+        }
+    }
+    
+    // Separate function to create and show the overlay
+    private func createAndShowOverlay(with text: String) {
         // Create our SwiftUI view for the overlay
         // onClose is a callback that will be called when user clicks the X button
         let overlayView = OverlayView(selectedText: text) { [weak self] in
             DispatchQueue.main.async {
-                self?.overlayWindow?.close()
-                self?.overlayWindow = nil
+                guard let self = self, let window = self.overlayWindow else { return }
+                
+                window.orderOut(nil)  // Hide first
+                window.contentView = nil  // Clear content
+                window.close()  // Then close
+                self.overlayWindow = nil
             }
         }
         
         // NSHostingView wraps a SwiftUI view so it can be used in an NSWindow
-        // (NSWindow is the old AppKit way of creating windows)
         let hostingView = NSHostingView(rootView: overlayView)
         
         // Create a new window for our overlay
-        overlayWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 300), // Size and position
-            styleMask: [.borderless, .nonactivatingPanel], // No title bar, doesn't steal focus
-            backing: .buffered, // How the window is drawn (buffered is standard)
-            defer: false // Create the window immediately
+        let newWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 300),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
         )
         
         // Configure the window appearance and behavior
-        overlayWindow?.contentView = hostingView // Put our view inside the window
-        overlayWindow?.backgroundColor = .clear // Transparent background
-        overlayWindow?.isOpaque = false // Allow transparency
-        overlayWindow?.level = .floating // Float above other windows
-        overlayWindow?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary] // Show on all desktops
+        newWindow.contentView = hostingView
+        newWindow.backgroundColor = .clear
+        newWindow.isOpaque = false
+        newWindow.level = .floating
+        newWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        newWindow.isReleasedWhenClosed = false  // Important: prevent premature deallocation
+        
+        // Store reference before showing
+        self.overlayWindow = newWindow
         
         // Center the window on the screen
-        if let screen = NSScreen.main, let window = overlayWindow {
-            let screenRect = screen.visibleFrame // Get the visible area (excluding menu bar)
-            let windowRect = window.frame // Get our window's size
-
-            // Calculate center position
+        if let screen = NSScreen.main {
+            let screenRect = screen.visibleFrame
+            let windowRect = newWindow.frame
+            
             let x = screenRect.midX - windowRect.width / 2
             let y = screenRect.midY - windowRect.height / 2
-
-            // Move the window to the center
-            window.setFrameOrigin(NSPoint(x: x, y: y))
+            
+            newWindow.setFrameOrigin(NSPoint(x: x, y: y))
         }
         
         // Show the window
-        overlayWindow?.makeKeyAndOrderFront(nil)
+        newWindow.makeKeyAndOrderFront(nil)
     }
     
     // This function shows an error dialog
