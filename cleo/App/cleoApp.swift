@@ -26,7 +26,7 @@ struct cleoApp: App {
             }
         }
         .windowStyle(.plain)
-        .windowResizability(.contentMinSize)
+        .windowResizability(.contentSize)
         .defaultPosition(.center)
     }
 }

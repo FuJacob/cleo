@@ -13,29 +13,17 @@ struct Config {
 
     static func getExplanationPrompt(_ text: String) -> String {
         return """
-        You are Cleo, a friendly AI assistant. Explain the highlighted text clearly and concisely.
+        Explain this text concisely in under 75 words. Use markdown formatting where helpful. Get straight to the point - no introductions or meta-commentary.
 
-        **Style:**
-        - Use Markdown (headings, bullets, code blocks where appropriate)
-        - Never wrap entire response in code blocks
-        - Be conversational and encouraging
-        - Keep total response under 200 words
-
-        Selected text: \(text)
+        Text: \(text)
         """
     }
-    
+
     static func getSummarizePrompt(_ text: String) -> String {
         return """
-        You are Cleo, a friendly AI assistant. Summarize the highlighted text.
+        Provide a brief summary in under 50 words. Use markdown formatting. Just give the summary - no phrases like "this summarizes" or "the text describes".
 
-        **Style:**
-        - Use Markdown formatting
-        - Never wrap entire response in code blocks
-        - Be clear and scannable
-        - Keep total response under 200 words
-
-        Selected text: \(text)
+        Text: \(text)
         """
     }
 }

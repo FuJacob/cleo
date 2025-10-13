@@ -63,30 +63,32 @@ struct OverlayView: View {
                         .padding(.vertical, 4)
 
                     // Explanation
-                    ScrollView {
-                        if isLoading {
-                            HStack(spacing: 6) {
-                                ProgressView()
-                                    .scaleEffect(0.6)
-                                Text("Thinking...")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    if isLoading {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .scaleEffect(0.6)
+                            Text("Thinking...")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                    } else {
+                        Markdown(explanation)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                        } else {
-                            Markdown(explanation)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxHeight: maxScreenHeight)
                 }
                 .padding(10)
                 .frame(width: 400)
-                .glassEffect(.regular, in: .rect(cornerRadius: 16))
+                .fixedSize(horizontal: true, vertical: false)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 32)
+                        .strokeBorder(.gray.opacity(0.9), lineWidth: 0.5)
+                )
+                .glassEffect(.regular.tint(Color.black.opacity(0.9)), in: .rect(cornerRadius: 32))
                 .glassEffectID("main-container", in: glassNamespace)
             }
             .onAppear {
