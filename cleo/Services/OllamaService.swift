@@ -9,10 +9,11 @@ import Foundation
 
 struct OllamaService {
     
-    func explainTextWithStreaming(_ text: String, onChunk: @MainActor @escaping (String) -> Void) async throws {
+    func explainTextWithStreaming(_ text: String, onStreamStart: @MainActor @escaping () -> Void, onChunk: @MainActor @escaping (String) -> Void) async throws {
         guard let url = URL(string: Config.ollamaURL) else {
             throw NSError(domain: "Invalid URL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid Ollama URL"])
         }
+        var isFirstChunk = true;
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -38,7 +39,11 @@ struct OllamaService {
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let chunk = json["response"] as? String {
                 await MainActor.run {onChunk(chunk)}
-                print(chunk)
+                if isFirstChunk {
+                    await onStreamStart()
+                    isFirstChunk = false
+                }
+                
             }
         }
     }

@@ -16,10 +16,13 @@ struct Config {
     
     static func getPrompt(_ text: String) -> String {
         return """
-        Explain the following text in simple, clear terms. Keep your explanation concise (under 100 words).
-        
+        Explain the following text in simple, clear terms (under 100 words).
+
+        Format your answer in Markdown using headings, bolding, bullet points, and spacing.
+        Do NOT include triple backticks ``` in the output.
+
         Text to explain: "\(text)"
-        
+
         Explanation:
-        """}
-}
+        """
+    }}

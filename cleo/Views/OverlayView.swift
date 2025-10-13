@@ -1,11 +1,11 @@
 import Foundation
 import SwiftUI
-
+import MarkdownUI
 struct OverlayView: View {
     let selectedText: String
     let onClose: () -> Void
 
-    @State private var explanation: String = "Thinking..."
+    @State private var explanation: String = ""
     @State private var isLoading: Bool = true
     @State private var hasError: Bool = false
     @State private var fetchTask: Task<Void, Never>?
@@ -71,18 +71,13 @@ struct OverlayView: View {
                                 HStack(spacing: 10) {
                                     ProgressView()
                                         .scaleEffect(0.75)
-                                    Text(explanation)
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(.secondary)
+                                    Text("Thinking...")
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(14)
                             } else {
-                                Text(explanation)
-                                    .font(.system(size: 13))
-                                    .textSelection(.enabled)
-                                    .padding(14)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Markdown(explanation)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                         .frame(maxHeight: 340)
@@ -113,9 +108,8 @@ struct OverlayView: View {
     private func startFetching() {
         fetchTask?.cancel()
 
-        explanation = "Thinking..."
         isLoading = true
-
+        explanation = ""
         fetchTask = Task {
             await fetchExplanation()
         }
@@ -127,18 +121,16 @@ struct OverlayView: View {
         do {
             if Config.stream {
                 // Clear "Thinking..." before streaming starts
-        
+                
+                print(self.isLoading)
+                print(self.explanation)
 
 
                 // Streaming: update UI as each chunk arrives
-                try await service.explainTextWithStreaming(selectedText) { chunk in
-                    if self.isLoading {
-                        self.isLoading = false
-                        self.explanation = chunk
-                    }
-                    else {
-                        self.explanation += chunk}
-                }
+                try await service.explainTextWithStreaming(selectedText,onStreamStart: { self.isLoading = false}) { chunk in
+                    print(self.explanation);
+                    self.explanation += chunk};
+                
             } else {
                 // Non-streaming: get complete response
                 let result = try await service.explainText(selectedText)
@@ -150,6 +142,7 @@ struct OverlayView: View {
                     self.isLoading = false
                 }
             }
+            print("FINAL EXPLANATION:", self.explanation)
         }
         catch {
             guard !Task.isCancelled else { return }
