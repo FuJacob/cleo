@@ -10,251 +10,201 @@ import AppKit
 
 @main
 struct cleoApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-        
+    @StateObject private var appState = AppState()
+
     var body: some Scene {
-        Settings {
-            EmptyView()
+        // Menu bar icon with dropdown
+        MenuBarExtra("Cleo", systemImage: "sparkles") {
+            MenuContent(appState: appState)
+        }
+
+        // Overlay window for showing explanations
+        Window("Overlay", id: "overlay") {
+            if let text = appState.selectedText {
+                OverlayView(selectedText: text) {
+                    appState.closeOverlay()
+                }
+            }
+        }
+        .windowStyle(.plain)
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+    }
+}
+
+struct MenuContent: View {
+    @ObservedObject var appState: AppState
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Group {
+            Button("About Cleo") {
+                appState.showAboutAlert()
+            }
+
+            Divider()
+
+            Button("Quit") {
+                NSApplication.shared.terminate(nil)
+            }
+            .keyboardShortcut("q")
+        }
+        .onAppear {
+            appState.openWindowAction = { [openWindow] windowId in
+                openWindow(id: windowId)
+            }
         }
     }
 }
 
+// Observable state manager for the app
+class AppState: ObservableObject {
+    @Published var selectedText: String?
+    private var eventMonitor: Any?
+    var openWindowAction: ((String) -> Void)?
+    private var isWindowVisible: Bool = false
 
-class AppDelegate: NSObject, NSApplicationDelegate {
-    var statusItem: NSStatusItem?
-    
-    var overlayWindow: NSWindow?
-    
-    var eventMonitor: Any?
-    
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-
-        if let button = statusItem?.button {
-
-            button.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Meet Cleo.")
-
-
-            button.action = #selector(statusBarButtonClicked)
-
-            checkAndRequestPermissions()
-        }
+    init() {
+        checkAndRequestPermissions()
     }
-    
-    func applicationWillTerminate(_ notification: Notification) {
-        // Clean up resources before app terminates
+
+    deinit {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
-            eventMonitor = nil
-        }
-        
-        if let window = overlayWindow {
-            window.orderOut(nil)
-            window.contentView = nil
-            window.close()
-            overlayWindow = nil
         }
     }
-    
-    @objc func statusBarButtonClicked() {
+
+    func showAboutAlert() {
         let alert = NSAlert()
         alert.messageText = "Cleo - AI Text Analysis"
         alert.informativeText = "Select some text, and press Cmd+Shift+E to analyze it."
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
-    
-    
-    // This function checks and requests all necessary permissions
+
     func checkAndRequestPermissions() {
         checkAccessibilityPermissions()
         setupKeyboardMonitor()
     }
 
-    // This function checks if we have accessibility permissions
     func checkAccessibilityPermissions() {
         let accessEnabled = AXIsProcessTrusted()
 
         if !accessEnabled {
             print("Requesting accessibility permissions...")
-            // Show the permission dialog
             let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
             let _ = AXIsProcessTrustedWithOptions(options)
         } else {
             print("Accessibility permissions granted")
         }
     }
-    
-    
-    // This function sets up a listener for keyboard shortcuts
+
     func setupKeyboardMonitor() {
-        // addGlobalMonitorForEvents listens for keyboard events ANYWHERE on the Mac
-        // Not just in our app, but in ANY app
-        // .keyDown means we're listening for key press events
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            // [weak self] prevents memory leaks by not holding a strong reference to self
-            // event contains information about the key that was pressed
-            
-            // Check if Command + Shift keys are held down
-            // AND if the E key (keyCode 14) was pressed
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 14 {
-                // If both conditions are true, call our handleShortcut function
                 self?.handleShortcut()
             }
         }
     }
-    
-    
+
     func handleShortcut() {
         print("Shortcut detected!")
-        
-        // Try to get the text the user has selected
-        if let selectedText = getSelectedText() {
-            // If we got text successfully, print it and show the overlay
-            print("Selected text: \(selectedText)")
-            showOverlay(with: selectedText)
+
+        if let text = getSelectedText(), !text.isEmpty {
+            print("Selected text: \(text)")
+
+            // Check if this is the same text as currently stored
+            if text == selectedText {
+                print("Same text - just toggling visibility")
+                // Same text - just toggle window (don't regenerate)
+                if isWindowVisible {
+                    closeOverlay()
+                } else {
+                    openOverlayWindow()
+                    isWindowVisible = true
+                }
+            } else {
+                // New text - close old window and show new one with fresh explanation
+                print("New text - generating new explanation")
+                closeOverlay()
+                showOverlay(with: text)
+                isWindowVisible = true
+            }
         } else {
-            // If no text was selected, show an error message
-            print("No text selected")
-            showError("No text selected. Please select some text first.")
+            print("No text selected - toggling window visibility")
+            // No text selected: toggle window visibility
+            if isWindowVisible {
+                closeOverlay()
+            } else {
+                // Reopen with last explanation if available
+                if selectedText != nil {
+                    openOverlayWindow()
+                    isWindowVisible = true
+                }
+            }
         }
     }
-    
-    
-    
-    // This function gets whatever text the user has selected in any app
-    // It returns an optional String (String?) because it might fail
+
     func getSelectedText() -> String? {
-        // Access the system clipboard (where copied text is stored)
         let pasteboard = NSPasteboard.general
-        
-        // Save whatever is currently on the clipboard
-        // We'll restore this later so we don't mess up the user's clipboard
         let oldContents = pasteboard.string(forType: .string)
-        
-        // We're going to simulate pressing Cmd+C to copy selected text
-        // CGEventSource creates keyboard events
+
         let source = CGEventSource(stateID: .combinedSessionState)
-        
-        // Create virtual key press events
-        // 0x37 is the keycode for Command key
-        // 0x08 is the keycode for C key
+
         let cmdDown = CGEvent(keyboardEventSource: source, virtualKey: 0x37, keyDown: true)
         let cDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
         let cUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
         let cmdUp = CGEvent(keyboardEventSource: source, virtualKey: 0x37, keyDown: false)
-        
-        // Set the Command modifier flag on the events
+
         cmdDown?.flags = .maskCommand
         cDown?.flags = .maskCommand
         cUp?.flags = .maskCommand
-        
-        // Actually send these keyboard events to the system
-        // This simulates the user pressing Cmd+C
+
         cmdDown?.post(tap: .cghidEventTap)
         cDown?.post(tap: .cghidEventTap)
         cUp?.post(tap: .cghidEventTap)
         cmdUp?.post(tap: .cghidEventTap)
-        
-        // Wait 0.1 seconds for the clipboard to update with the copied text
+
         Thread.sleep(forTimeInterval: 0.1)
-        
-        // Get whatever is now on the clipboard (should be the selected text)
+
         let selectedText = pasteboard.string(forType: .string)
-        
-        // Check if we actually got new text
-        // If the clipboard is the same as before, or empty, nothing was selected
+
         if selectedText == oldContents || selectedText?.isEmpty == true {
-            return nil // Return nil to indicate failure
+            return nil
         }
-        
-        // Return the selected text
+
         return selectedText
     }
-    
-    
-    // This function shows the overlay window with the explanation
+
     func showOverlay(with text: String) {
-        // Ensure we're on the main thread for all UI operations
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            // Close any existing overlay window first
-            if let existingWindow = self.overlayWindow {
-                existingWindow.orderOut(nil)  // Hide window first
-                existingWindow.contentView = nil  // Clear content view
-                existingWindow.close()  // Then close
-                self.overlayWindow = nil
-                
-                // Small delay to ensure proper cleanup
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.createAndShowOverlay(with: text)
-                }
-            } else {
-                self.createAndShowOverlay(with: text)
+            self?.selectedText = text
+            self?.openOverlayWindow()
+        }
+    }
+
+    func openOverlayWindow() {
+        // Open the overlay window using SwiftUI's window management
+        openWindowAction?("overlay")
+
+        // Configure window appearance after opening
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "overlay" }) {
+                window.level = .floating
+                window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+                window.isMovableByWindowBackground = true  // Make entire window draggable
+                window.makeKeyAndOrderFront(nil)  // Allow window to become key so it works properly
             }
         }
     }
-    
-    // Separate function to create and show the overlay
-    private func createAndShowOverlay(with text: String) {
-        // Create our SwiftUI view for the overlay
-        // onClose is a callback that will be called when user clicks the X button
-        let overlayView = OverlayView(selectedText: text) { [weak self] in
-            DispatchQueue.main.async {
-                guard let self = self, let window = self.overlayWindow else { return }
-                
-                window.orderOut(nil)  // Hide first
-                window.contentView = nil  // Clear content
-                window.close()  // Then close
-                self.overlayWindow = nil
+
+    func closeOverlay() {
+        DispatchQueue.main.async { [weak self] in
+            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "overlay" }) {
+                window.close()
             }
+            self?.isWindowVisible = false
+            // Keep selectedText so window can be reopened with same content
         }
-        
-        // NSHostingView wraps a SwiftUI view so it can be used in an NSWindow
-        let hostingView = NSHostingView(rootView: overlayView)
-        
-        // Create a new window for our overlay
-        let newWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 300),
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false
-        )
-        
-        // Configure the window appearance and behavior
-        newWindow.contentView = hostingView
-        newWindow.backgroundColor = .clear
-        newWindow.isOpaque = false
-        newWindow.level = .floating
-        newWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        newWindow.isReleasedWhenClosed = false  // Important: prevent premature deallocation
-        
-        // Store reference before showing
-        self.overlayWindow = newWindow
-        
-        // Center the window on the screen
-        if let screen = NSScreen.main {
-            let screenRect = screen.visibleFrame
-            let windowRect = newWindow.frame
-            
-            let x = screenRect.midX - windowRect.width / 2
-            let y = screenRect.midY - windowRect.height / 2
-            
-            newWindow.setFrameOrigin(NSPoint(x: x, y: y))
-        }
-        
-        // Show the window
-        newWindow.makeKeyAndOrderFront(nil)
-    }
-    
-    // This function shows an error dialog
-    func showError(_ message: String) {
-        let alert = NSAlert()
-        alert.messageText = "Error" // Title
-        alert.informativeText = message // Error message
-        alert.alertStyle = .warning // Warning style (yellow icon)
-        alert.addButton(withTitle: "OK") // OK button
-        alert.runModal() // Show and wait for user to click
     }
 }

@@ -12,5 +12,14 @@ struct Config {
     
     static let model = "phi3.5"
     
-    static let stream = false
+    static let stream = true
+    
+    static func getPrompt(_ text: String) -> String {
+        return """
+        Explain the following text in simple, clear terms. Keep your explanation concise (under 100 words).
+        
+        Text to explain: "\(text)"
+        
+        Explanation:
+        """}
 }
