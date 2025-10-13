@@ -1,5 +1,5 @@
 //
-//  cleoApp.swift
+//  AppState.swift
 //  cleo
 //
 //  Created by Jacob Fu on 2025-10-11.
@@ -8,56 +8,7 @@
 import SwiftUI
 import AppKit
 
-@main
-struct cleoApp: App {
-    @StateObject private var appState = AppState()
-
-    var body: some Scene {
-        // Menu bar icon with dropdown
-        MenuBarExtra("Cleo", systemImage: "sparkles") {
-            MenuContent(appState: appState)
-        }
-
-        // Overlay window for showing explanations
-        Window("Overlay", id: "overlay") {
-            if let text = appState.selectedText {
-                OverlayView(selectedText: text) {
-                    appState.closeOverlay()
-                }
-            }
-        }
-        .windowStyle(.plain)
-        .windowResizability(.contentSize)
-        .defaultPosition(.center)
-    }
-}
-
-struct MenuContent: View {
-    @ObservedObject var appState: AppState
-    @Environment(\.openWindow) private var openWindow
-
-    var body: some View {
-        Group {
-            Button("About Cleo") {
-                appState.showAboutAlert()
-            }
-
-            Divider()
-
-            Button("Quit") {
-                NSApplication.shared.terminate(nil)
-            }
-            .keyboardShortcut("q")
-        }
-        .onAppear {
-            appState.openWindowAction = { [openWindow] windowId in
-                openWindow(id: windowId)
-            }
-        }
-    }
-}
-
-// Observable state manager for the app
+/// Main application state manager
 class AppState: ObservableObject {
     @Published var selectedText: String?
     private var eventMonitor: Any?
@@ -74,6 +25,8 @@ class AppState: ObservableObject {
         }
     }
 
+    // MARK: - UI Actions
+
     func showAboutAlert() {
         let alert = NSAlert()
         alert.messageText = "Cleo - AI Text Analysis"
@@ -82,12 +35,14 @@ class AppState: ObservableObject {
         alert.runModal()
     }
 
+    // MARK: - Permissions
+
     func checkAndRequestPermissions() {
         checkAccessibilityPermissions()
         setupKeyboardMonitor()
     }
 
-    func checkAccessibilityPermissions() {
+    private func checkAccessibilityPermissions() {
         let accessEnabled = AXIsProcessTrusted()
 
         if !accessEnabled {
@@ -99,7 +54,9 @@ class AppState: ObservableObject {
         }
     }
 
-    func setupKeyboardMonitor() {
+    // MARK: - Keyboard Monitoring
+
+    private func setupKeyboardMonitor() {
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 14 {
                 self?.handleShortcut()
@@ -110,7 +67,7 @@ class AppState: ObservableObject {
     func handleShortcut() {
         print("Shortcut detected!")
 
-        if let text = getSelectedText(), !text.isEmpty {
+        if let text = ClipboardService.getSelectedText(), !text.isEmpty {
             print("Selected text: \(text)")
 
             // Check if this is the same text as currently stored
@@ -145,36 +102,7 @@ class AppState: ObservableObject {
         }
     }
 
-    func getSelectedText() -> String? {
-        let pasteboard = NSPasteboard.general
-        let oldContents = pasteboard.string(forType: .string)
-
-        let source = CGEventSource(stateID: .combinedSessionState)
-
-        let cmdDown = CGEvent(keyboardEventSource: source, virtualKey: 0x37, keyDown: true)
-        let cDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
-        let cUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
-        let cmdUp = CGEvent(keyboardEventSource: source, virtualKey: 0x37, keyDown: false)
-
-        cmdDown?.flags = .maskCommand
-        cDown?.flags = .maskCommand
-        cUp?.flags = .maskCommand
-
-        cmdDown?.post(tap: .cghidEventTap)
-        cDown?.post(tap: .cghidEventTap)
-        cUp?.post(tap: .cghidEventTap)
-        cmdUp?.post(tap: .cghidEventTap)
-
-        Thread.sleep(forTimeInterval: 0.1)
-
-        let selectedText = pasteboard.string(forType: .string)
-
-        if selectedText == oldContents || selectedText?.isEmpty == true {
-            return nil
-        }
-
-        return selectedText
-    }
+    // MARK: - Window Management
 
     func showOverlay(with text: String) {
         DispatchQueue.main.async { [weak self] in
@@ -192,8 +120,8 @@ class AppState: ObservableObject {
             if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "overlay" }) {
                 window.level = .floating
                 window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-                window.isMovableByWindowBackground = true  // Make entire window draggable
-                window.makeKeyAndOrderFront(nil)  // Allow window to become key so it works properly
+                window.isMovableByWindowBackground = true
+                window.makeKeyAndOrderFront(nil)
             }
         }
     }
