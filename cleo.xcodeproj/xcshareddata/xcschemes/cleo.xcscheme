@@ -55,8 +55,8 @@
       <AdditionalOptions>
          <AdditionalOption
             key = "NSZombieEnabled"
-            value = "YES"
-            isEnabled = "YES">
+            value = "NO"
+            isEnabled = "NO">
          </AdditionalOption>
       </AdditionalOptions>
    </LaunchAction>

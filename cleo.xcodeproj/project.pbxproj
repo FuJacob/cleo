@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		191FDB382E9CC1D000F5845A /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 191FDB372E9CC1D000F5845A /* MarkdownUI */; };
+		19800D872E9D9382000CE5FB /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 19800D862E9D9382000CE5FB /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				191FDB382E9CC1D000F5845A /* MarkdownUI in Frameworks */,
+				19800D872E9D9382000CE5FB /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = cleo;
 			packageProductDependencies = (
-				191FDB372E9CC1D000F5845A /* MarkdownUI */,
+				19800D862E9D9382000CE5FB /* MarkdownUI */,
 			);
 			productName = cleo;
 			productReference = 191E3EE12E9B3B040025E701 /* cleo.app */;
@@ -101,7 +101,7 @@
 			mainGroup = 191E3ED82E9B3B040025E701;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				191FDB362E9CC1D000F5845A /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				19800D852E9D9382000CE5FB /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 191E3EE22E9B3B040025E701 /* Products */;
@@ -332,7 +332,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		191FDB362E9CC1D000F5845A /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+		19800D852E9D9382000CE5FB /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
 			requirement = {
@@ -343,9 +343,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		191FDB372E9CC1D000F5845A /* MarkdownUI */ = {
+		19800D862E9D9382000CE5FB /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 191FDB362E9CC1D000F5845A /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			package = 19800D852E9D9382000CE5FB /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
 			productName = MarkdownUI;
 		};
 /* End XCSwiftPackageProductDependency section */

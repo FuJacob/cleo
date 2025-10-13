@@ -9,7 +9,7 @@ import Foundation
 
 struct OllamaService {
     
-    func explainTextWithStreaming(_ text: String, onStreamStart: @MainActor @escaping () -> Void, onChunk: @MainActor @escaping (String) -> Void) async throws {
+    func generateTextWithStreaming(_ text: String, _ selectedShortcut: Int, onStreamStart: @MainActor @escaping () -> Void, onChunk: @MainActor @escaping (String) -> Void) async throws {
         guard let url = URL(string: Config.ollamaURL) else {
             throw NSError(domain: "Invalid URL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid Ollama URL"])
         }
@@ -22,7 +22,7 @@ struct OllamaService {
 
         let body: [String: Any] = [
             "model": Config.model,
-            "prompt": Config.getPrompt(text),
+            "prompt": selectedShortcut == 14 ? Config.getExplanationPrompt(text) : Config.getSummarizePrompt(text),
             "stream": true
         ]
 
@@ -64,7 +64,7 @@ struct OllamaService {
         // This is the actual data we send to Ollama in JSON format
         let requestBody: [String: Any] = [
             "model": Config.model, // Which AI model to use
-            "prompt": Config.getPrompt(text), // Our question
+            "prompt": Config.getExplanationPrompt(text), // Our question
             "stream": Config.stream, // Don't stream (get full response at once)
             "options": [
                 "temperature": 0.7, // How creative (0=focused, 1=creative)

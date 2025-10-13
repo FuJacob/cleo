@@ -3,6 +3,7 @@ import SwiftUI
 import MarkdownUI
 struct OverlayView: View {
     let selectedText: String
+    let selectedShortcut: Int
     let onClose: () -> Void
 
     @State private var explanation: String = ""
@@ -10,84 +11,82 @@ struct OverlayView: View {
     @State private var hasError: Bool = false
     @State private var fetchTask: Task<Void, Never>?
     @Namespace private var glassNamespace
-    
+
+    private var maxScreenHeight: CGFloat {
+        if let screen = NSScreen.main {
+            return screen.visibleFrame.height / 2
+        }
+        return 400
+    }
+
     var body: some View {
         if #available(macOS 26.0, *) {
-            GlassEffectContainer(spacing: 16) {
-                VStack(alignment: .leading, spacing: 14) {
-                    // Header with close button using interactive glass
+            GlassEffectContainer(spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Header with close button
                     HStack {
                         Text("cleo")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.primary)
-                        
+
                         if hasError {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 11))
+                                .font(.system(size: 9))
                                 .foregroundColor(.orange)
                                 .help("Connection error - check if Ollama is running")
-                                .glassEffect(.regular.tint(.orange).interactive())
                         }
-                        
+
                         Spacer()
-                        
+
                         Button(action: onClose) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 20))
-                                .symbolRenderingMode(.hierarchical)
+                            Image(systemName: "xmark")
+                                .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.secondary)
                         }
-                        .buttonStyle(.glass)
+                        .buttonStyle(.borderless)
                         .help("Close")
                     }
-                    .padding(.vertical, 8)
-                    .contentShape(Rectangle())
-                    
-                    // Selected text section with glass effect
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Selected")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                            .textCase(.uppercase)
-                        
-                        Text(selectedText)
-                            .font(.system(size: 13))
-                            .lineLimit(3)
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                            .glassEffectID("selected-text", in: glassNamespace)
-                    }
-                    
-                    // Explanation section with glass effect
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Explanation")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                            .textCase(.uppercase)
-                        
-                        ScrollView {
-                            if isLoading {
-                                HStack(spacing: 10) {
-                                    ProgressView()
-                                        .scaleEffect(0.75)
-                                    Text("Thinking...")
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(14)
-                            } else {
-                                Markdown(explanation)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+
+                    // Selected text
+                    Text(selectedText)
+                        .font(.system(size: 12))
+                        .lineLimit(3)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // Divider
+                    Divider()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+
+                    // Explanation
+                    ScrollView {
+                        if isLoading {
+                            HStack(spacing: 6) {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                Text("Thinking...")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                        } else {
+                            Markdown(explanation)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxHeight: 340)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 14))
-                        .glassEffectID("explanation", in: glassNamespace)
                     }
+                    .frame(maxHeight: maxScreenHeight)
                 }
-                .padding(22)
-                .frame(width: 460)
-                .glassEffect(.regular.tint(.blue).interactive(), in: .rect(cornerRadius: 26))
+                .padding(10)
+                .frame(width: 400)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .glassEffectID("main-container", in: glassNamespace)
             }
             .onAppear {
@@ -127,7 +126,7 @@ struct OverlayView: View {
 
 
                 // Streaming: update UI as each chunk arrives
-                try await service.explainTextWithStreaming(selectedText,onStreamStart: { self.isLoading = false}) { chunk in
+                try await service.generateTextWithStreaming(selectedText,selectedShortcut, onStreamStart: { self.isLoading = false}) { chunk in
                     print(self.explanation);
                     self.explanation += chunk};
                 

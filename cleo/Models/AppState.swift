@@ -11,6 +11,7 @@ import AppKit
 /// Main application state manager
 class AppState: ObservableObject {
     @Published var selectedText: String?
+    @Published var selectedShortcut: Int?
     private var eventMonitor: Any?
     var openWindowAction: ((String) -> Void)?
     private var isWindowVisible: Bool = false
@@ -57,16 +58,18 @@ class AppState: ObservableObject {
     // MARK: - Keyboard Monitoring
 
     private func setupKeyboardMonitor() {
+        let validKeyCodes = Set([14, 1])
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 14 {
-                self?.handleShortcut()
+            if event.modifierFlags.contains([.command, .control]) && validKeyCodes.contains(Int(event.keyCode)) {
+                self?.handleShortcut(keyCode: Int(event.keyCode))
             }
         }
     }
 
-    func handleShortcut() {
+    func handleShortcut(keyCode: Int) {
         print("Shortcut detected!")
-
+        
+        selectedShortcut = keyCode
         if let text = ClipboardService.getSelectedText(), !text.isEmpty {
             print("Selected text: \(text)")
 

@@ -26,11 +26,12 @@ struct MenuBarView: View {
                     }
                     .buttonStyle(.glass)
                     .glassEffectID("about-button", in: menuGlassNamespace)
-                    
+
                     Divider()
                         .padding(.vertical, 4)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 1))
-                    
+                        .glassEffect(.regular.tint(.secondary), in: .rect(cornerRadius: 1))
+                        .glassEffectID("divider", in: menuGlassNamespace)
+
                     Button(role: .destructive) {
                         NSApplication.shared.terminate(nil)
                     } label: {

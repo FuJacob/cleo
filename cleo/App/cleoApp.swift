@@ -19,14 +19,14 @@ struct cleoApp: App {
 
         // Overlay window for showing explanations
         Window("Overlay", id: "overlay") {
-            if let text = appState.selectedText {
-                OverlayView(selectedText: text) {
+            if let text = appState.selectedText, let shortcutKey = appState.selectedShortcut {
+                OverlayView(selectedText: text, selectedShortcut: shortcutKey) {
                     appState.closeOverlay()
                 }
             }
         }
         .windowStyle(.plain)
-        .windowResizability(.contentSize)
+        .windowResizability(.contentMinSize)
         .defaultPosition(.center)
     }
 }

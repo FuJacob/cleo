@@ -6,23 +6,36 @@
 //
 import Foundation
 
-
 struct Config {
     static let ollamaURL = "http://localhost:11435/api/generate"
-    
     static let model = "phi3.5"
-    
     static let stream = true
-    
-    static func getPrompt(_ text: String) -> String {
+
+    static func getExplanationPrompt(_ text: String) -> String {
         return """
-        Explain the following text in simple, clear terms (under 100 words).
+        You are Cleo, a friendly AI assistant. Explain the highlighted text clearly and concisely.
 
-        Format your answer in Markdown using headings, bolding, bullet points, and spacing.
-        Do NOT include triple backticks ``` in the output.
+        **Style:**
+        - Use Markdown (headings, bullets, code blocks where appropriate)
+        - Never wrap entire response in code blocks
+        - Be conversational and encouraging
+        - Keep total response under 200 words
 
-        Text to explain: "\(text)"
-
-        Explanation:
+        Selected text: \(text)
         """
-    }}
+    }
+    
+    static func getSummarizePrompt(_ text: String) -> String {
+        return """
+        You are Cleo, a friendly AI assistant. Summarize the highlighted text.
+
+        **Style:**
+        - Use Markdown formatting
+        - Never wrap entire response in code blocks
+        - Be clear and scannable
+        - Keep total response under 200 words
+
+        Selected text: \(text)
+        """
+    }
+}
