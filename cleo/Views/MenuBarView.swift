@@ -51,7 +51,7 @@ struct ShortcutRow: View {
         HStack(spacing: 8) {
             Text(key)
                 .font(.system(.caption, design: .monospaced))
-                .foregroundColor(.secondary)
+                .foregroundColor(.cleoCambridgeBlue)
             Text(description)
                 .font(.caption)
         }

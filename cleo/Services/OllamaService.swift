@@ -25,16 +25,16 @@ struct OllamaService {
             "prompt": selectedShortcut == 14 ? Config.getExplanationPrompt(text) : Config.getSummarizePrompt(text),
             "stream": true,
             "options": [
-                "temperature": 0.5,        // balanced tone: stable and factual, not too creative
-                "top_p": 0.8,              // focus more on likely words
-                "top_k": 40,               // standard top-k filtering
-                "repeat_penalty": 1.2,     // avoid repetition in concise responses
-                "repeat_last_n": 64,       // moderate memory of previous tokens
-                "mirostat": 0,             // disable adaptive perplexity control for stability
-                "num_ctx": 2048,           // enough context for short explanations
-                "num_predict": 250,        // max tokens (~2–3 paragraphs)
-                "min_p": 0.05,             // filter out extremely low-probability words
-                "seed": 42,                // deterministic responses for consistency
+                "temperature": 0.5,
+                "top_p": 0.8,
+                "top_k": 40,
+                "repeat_penalty": 1.2,
+                "repeat_last_n": 64,
+                "mirostat": 0,
+                "num_ctx": 512,
+                "num_predict": 250,
+                "min_p": 0.05,
+                "seed": 42
             ]
         ]
 
@@ -75,7 +75,10 @@ struct OllamaService {
         let requestBody: [String: Any] = [
             "model": Config.model,
             "prompt": Config.getRevisionPrompt(text),
-            "stream": false,  // MUST be false to get complete response
+            "stream": false,
+            "options": [
+                "num_ctx": 512  // minimal context window for speed
+            ]
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
@@ -135,15 +138,15 @@ struct OllamaService {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
     
         
-        // STEP 5: Create the request body
-        // This is the actual data we send to Ollama in JSON format
+        // Create the request body
         let requestBody: [String: Any] = [
-            "model": Config.model, // Which AI model to use
-            "prompt": Config.getExplanationPrompt(text), // Our question
-            "stream": Config.stream, // Don't stream (get full response at once)
+            "model": Config.model,
+            "prompt": Config.getExplanationPrompt(text),
+            "stream": Config.stream,
             "options": [
-                "temperature": 0.7, // How creative (0=focused, 1=creative)
-                "num_predict": 200 // Maximum words to generate
+                "temperature": 0.7,
+                "num_ctx": 512,
+                "num_predict": 200
             ]
         ]
         

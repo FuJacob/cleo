@@ -6,7 +6,7 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             Image(systemName: "sparkles")
                 .font(.system(size: 48))
-                .foregroundColor(.accentColor)
+                .foregroundColor(.cleoCambridgeBlue)
 
             Text("Welcome to Cleo")
                 .font(.title)
@@ -35,9 +35,11 @@ struct OnboardingView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .tint(.cleoCambridgeBlue)
         }
         .padding(32)
         .frame(width: 380, height: 420)
+        .background(Color.cleoFloralWhite.opacity(0.3))
     }
 }
 

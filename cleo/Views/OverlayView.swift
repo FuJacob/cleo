@@ -25,19 +25,20 @@ struct OverlayView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // Header with close button
                     HStack {
-                        Text("cleo")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        
+                        Image("cleo_logo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 14)
+
                         if hasError {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(size: 9))
                                 .foregroundColor(.orange)
                                 .help("Connection error - check if Ollama is running")
                         }
-                        
+
                         Spacer()
-                        
+
                         Button(action: onClose) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 11, weight: .medium))
@@ -86,9 +87,9 @@ struct OverlayView: View {
                 .padding(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 32)
-                        .strokeBorder(.gray.opacity(0.9), lineWidth: 0.5)
+                        .strokeBorder(Color.cleoAshGray.opacity(0.3), lineWidth: 0.5)
                 )
-                .glassEffect(.regular.tint(Color.black.opacity(0.9)), in: .rect(cornerRadius: 32))
+                .glassEffect(.regular.tint(Color.cleoFloralWhite.opacity(0.7)), in: .rect(cornerRadius: 32))
                 .glassEffectID("main-container", in: glassNamespace)
                 .animation(.easeInOut, value: explanation)
                 .fixedSize(horizontal: false, vertical: true)

@@ -6,7 +6,7 @@ struct cleoApp: App {
 
     var body: some Scene {
         // Menu bar icon
-        MenuBarExtra("Cleo", systemImage: "sparkles") {
+        MenuBarExtra {
             MenuBarView(appState: appState)
                 .onAppear {
                     // Open onboarding on first launch after menu bar appears
@@ -19,6 +19,11 @@ struct cleoApp: App {
                         }
                     }
                 }
+        } label: {
+            Image("cleo_logo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 18, height: 18)
         }
 
         // Onboarding window
