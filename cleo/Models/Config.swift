@@ -28,7 +28,7 @@ struct Config {
     }
     static func getRevisionPrompt(_ text: String) -> String {
         return """
-        Revise the following text to improve grammar, clarity, and flow. Output ONLY the revised text with no explanations, notes, or meta-commentary. Do not add parenthetical explanations or comments about your changes. Preserve all original line breaks, paragraph spacing, and formatting.
+        Revise the following text to improve grammar and clarity. Never use em dashes in your text. Avoid heavily altering the sentence structure. Output ONLY the revised text with no explanations, notes, or meta-commentary. Do not add parenthetical explanations or comments about your changes. Preserve all original line breaks, paragraph spacing, and formatting.
 
         Text: \(text)
         """

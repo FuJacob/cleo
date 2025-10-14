@@ -10,6 +10,17 @@ import AppKit
 
 /// Main application state manager
 class AppState: ObservableObject {
+    static let shared = AppState()
+    private let hasLaunchedKey = "hasLaunchedBefore"
+    
+    var isFirstLaunch: Bool {
+        return !UserDefaults.standard.bool(forKey: hasLaunchedKey)
+    }
+    
+    func markAsLaunched() {
+        UserDefaults.standard.set(true, forKey: hasLaunchedKey)
+    }
+    
     @Published var selectedText: String?
     @Published var selectedShortcut: Int?
     private var eventMonitor: Any?
@@ -27,14 +38,6 @@ class AppState: ObservableObject {
     }
 
     // MARK: - UI Actions
-
-    func showAboutAlert() {
-        let alert = NSAlert()
-        alert.messageText = "Cleo - AI Text Analysis"
-        alert.informativeText = "Select some text, and press Cmd+Shift+E to analyze it."
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
-    }
 
     // MARK: - Permissions
 

@@ -10,51 +10,50 @@ import SwiftUI
 struct MenuBarView: View {
     @ObservedObject var appState: AppState
     @Environment(\.openWindow) private var openWindow
-    @Namespace private var menuGlassNamespace
 
     var body: some View {
-        if #available(macOS 26.0, *) {
-            GlassEffectContainer(spacing: 8) {
-                VStack(spacing: 8) {
-                    Button {
-                        appState.showAboutAlert()
-                    } label: {
-                        Label("About Cleo", systemImage: "info.circle")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                    }
-                    .buttonStyle(.glass)
-                    .glassEffectID("about-button", in: menuGlassNamespace)
-
-                    Divider()
-                        .padding(.vertical, 4)
-                        .glassEffect(.regular.tint(.secondary), in: .rect(cornerRadius: 1))
-                        .glassEffectID("divider", in: menuGlassNamespace)
-
-                    Button(role: .destructive) {
-                        NSApplication.shared.terminate(nil)
-                    } label: {
-                        Label("Quit", systemImage: "power")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .keyboardShortcut("q")
-                    .glassEffectID("quit-button", in: menuGlassNamespace)
-                }
-                .padding(10)
-                .glassEffect(.regular.tint(.secondary).interactive(), in: .rect(cornerRadius: 12))
-                .glassEffectID("menu-container", in: menuGlassNamespace)
+        VStack(alignment: .leading, spacing: 0) {
+            // Shortcuts section
+            VStack(alignment: .leading, spacing: 4) {
+                ShortcutRow(key: "⌘⌃E", description: "Explain")
+                ShortcutRow(key: "⌘⌃S", description: "Summarize")
+                ShortcutRow(key: "⌘⌃R", description: "Revise")
             }
-            .onAppear {
-                appState.openWindowAction = { [openWindow] windowId in
-                    openWindow(id: windowId)
-                }
+            .padding(.vertical, 6)
+
+            Divider()
+
+            // Actions
+            Button("Documentation") {
+                NSWorkspace.shared.open(URL(string: "https://github.com/FuJacob/cleo")!)
             }
-        } else {
-            // Fallback on earlier versions
+
+            Divider()
+
+            Button("Quit") {
+                NSApplication.shared.terminate(nil)
+            }
+            .keyboardShortcut("q")
+        }
+        .onAppear {
+            appState.openWindowAction = { [openWindow] windowId in
+                openWindow(id: windowId)
+            }
+        }
+    }
+}
+
+struct ShortcutRow: View {
+    let key: String
+    let description: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(key)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(.secondary)
+            Text(description)
+                .font(.caption)
         }
     }
 }
