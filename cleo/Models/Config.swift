@@ -13,7 +13,7 @@ struct Config {
 
     static func getExplanationPrompt(_ text: String) -> String {
         return """
-        Explain this text concisely in under 75 words. Use markdown formatting where helpful. Get straight to the point - no introductions or meta-commentary.
+        Explain this text clearly and concisely. Use Markdown formatting (bold, italics, lists, and headers) for structure and clarity. Do NOT use code blocks or backticks in your response.
 
         Text: \(text)
         """
@@ -21,7 +21,14 @@ struct Config {
 
     static func getSummarizePrompt(_ text: String) -> String {
         return """
-        Provide a brief summary in under 50 words. Use markdown formatting. Just give the summary - no phrases like "this summarizes" or "the text describes".
+        Provide a short, clear summary. Use Markdown formatting (bold, italics, lists, and headers) for readability. Do NOT use code blocks or backticks in your response.
+
+        Text: \(text)
+        """
+    }
+    static func getRevisionPrompt(_ text: String) -> String {
+        return """
+        Revise the following text to improve grammar, clarity, and flow. Output ONLY the revised text with no explanations, notes, or meta-commentary. Do not add parenthetical explanations or comments about your changes. Preserve all original line breaks, paragraph spacing, and formatting.
 
         Text: \(text)
         """

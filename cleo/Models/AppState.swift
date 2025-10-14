@@ -58,7 +58,7 @@ class AppState: ObservableObject {
     // MARK: - Keyboard Monitoring
 
     private func setupKeyboardMonitor() {
-        let validKeyCodes = Set([14, 1])
+        let validKeyCodes = Set([14,13, 1])
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.modifierFlags.contains([.command, .control]) && validKeyCodes.contains(Int(event.keyCode)) {
                 self?.handleShortcut(keyCode: Int(event.keyCode))

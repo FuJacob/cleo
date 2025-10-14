@@ -30,14 +30,65 @@ struct ClipboardService {
         cUp?.post(tap: .cghidEventTap)
         cmdUp?.post(tap: .cghidEventTap)
 
-        Thread.sleep(forTimeInterval: 0.1)
+        // Wait for clipboard to update
+        Thread.sleep(forTimeInterval: 0.05)
 
         let selectedText = pasteboard.string(forType: .string)
+
+        if let old = oldContents, !old.isEmpty {
+            pasteboard.clearContents()
+            pasteboard.setString(old, forType: .string)
+        } else {
+            pasteboard.clearContents()
+        }
 
         if selectedText == oldContents || selectedText?.isEmpty == true {
             return nil
         }
 
         return selectedText
+    }
+
+    static func pasteGeneratedText(text: String) -> Void {
+        print("🔧 [PASTE] Starting paste operation")
+        print("🔧 [PASTE] Text to paste: \(text.prefix(50))...")
+
+        let pasteboard = NSPasteboard.general
+        let oldContents = pasteboard.string(forType: .string)
+        print("🔧 [PASTE] Old clipboard: \(oldContents?.prefix(50) ?? "nil")")
+
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        print("🔧 [PASTE] Set clipboard to new text")
+
+        let source = CGEventSource(stateID: .combinedSessionState)
+        print("🔧 [PASTE] Created event source")
+
+        let cmdDown = CGEvent(keyboardEventSource: source, virtualKey: 0x37, keyDown: true)
+        let vDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
+        let vUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
+        let cmdUp = CGEvent(keyboardEventSource: source, virtualKey: 0x37, keyDown: false)
+
+        cmdDown?.flags = .maskCommand
+        vDown?.flags = .maskCommand
+        vUp?.flags = .maskCommand
+
+        print("🔧 [PASTE] Posting Cmd+V events")
+        cmdDown?.post(tap: .cghidEventTap)
+        vDown?.post(tap: .cghidEventTap)
+        vUp?.post(tap: .cghidEventTap)
+        cmdUp?.post(tap: .cghidEventTap)
+        print("🔧 [PASTE] Posted all keyboard events")
+
+        // Wait for paste to complete before restoring clipboard
+        Thread.sleep(forTimeInterval: 0.05)
+        print("🔧 [PASTE] Waited 50ms")
+
+        pasteboard.clearContents()
+        if let old = oldContents, !old.isEmpty {
+            pasteboard.setString(old, forType: .string)
+            print("🔧 [PASTE] Restored old clipboard")
+        }
+        print("🔧 [PASTE] Paste operation complete")
     }
 }
