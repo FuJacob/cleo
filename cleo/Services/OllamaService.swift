@@ -20,9 +20,22 @@ struct OllamaService {
         request.timeoutInterval = 30
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+        // Determine which prompt to use based on shortcut
+        let prompt: String
+        switch selectedShortcut {
+        case 14: // E - Explain
+            prompt = AIConfig.getExplanationPrompt(text)
+        case 1: // S - Summarize
+            prompt = AIConfig.getSummarizePrompt(text)
+        case 17: // T - Translate
+            prompt = AIConfig.getTranslatePrompt(text)
+        default:
+            prompt = AIConfig.getExplanationPrompt(text)
+        }
+
         let body: [String: Any] = [
             "model": AIConfig.model,
-            "prompt": selectedShortcut == 14 ? AIConfig.getExplanationPrompt(text) : AIConfig.getSummarizePrompt(text),
+            "prompt": prompt,
             "stream": true,
             "options": [
                 "temperature": 0.5,

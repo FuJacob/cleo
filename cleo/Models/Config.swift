@@ -34,6 +34,14 @@ struct AIConfig {
         """
     }
 
+    static func getTranslatePrompt(_ text: String) -> String {
+        return """
+        Translate the following text that is in a foregin language, to English. If it's already in English, just return it unchanged. Use Markdown formatting (bold, italics, lists, and headers) for structure and clarity. Do NOT use code blocks or backticks in your response.
+
+        Text: \(text)
+        """
+    }
+
     static func getCustomPrompt(userPrompt: String, text: String) -> String {
         return """
         Respond in valid JSON format with exactly two fields: "type" and "response".

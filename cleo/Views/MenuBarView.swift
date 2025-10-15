@@ -17,6 +17,7 @@ struct MenuBarView: View {
             VStack(alignment: .leading, spacing: 4) {
                 ShortcutRow(key: "⌘⌃E", description: "Explain")
                 ShortcutRow(key: "⌘⌃S", description: "Summarize")
+                ShortcutRow(key: "⌘⌃T", description: "Translate")
                 ShortcutRow(key: "⌘⌃R", description: "Revise")
             }
             .padding(.vertical, 6)

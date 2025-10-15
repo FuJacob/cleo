@@ -19,6 +19,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 12) {
                 FeatureRow(shortcut: "⌘⌃E", title: "Explain text")
                 FeatureRow(shortcut: "⌘⌃S", title: "Summarize")
+                FeatureRow(shortcut: "⌘⌃T", title: "Translate")
                 FeatureRow(shortcut: "⌘⌃R", title: "Revise text")
             }
             .padding(.vertical, 8)
