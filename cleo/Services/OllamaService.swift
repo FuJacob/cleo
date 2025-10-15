@@ -10,7 +10,7 @@ import Foundation
 struct OllamaService {
     
     func generateTextWithStreaming(_ text: String, _ selectedShortcut: Int, onStreamStart: @MainActor @escaping () -> Void, onChunk: @MainActor @escaping (String) -> Void) async throws {
-        guard let url = URL(string: Config.ollamaURL) else {
+        guard let url = URL(string: AIConfig.ollamaURL) else {
             throw NSError(domain: "Invalid URL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid Ollama URL"])
         }
         var isFirstChunk = true;
@@ -21,8 +21,8 @@ struct OllamaService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body: [String: Any] = [
-            "model": Config.model,
-            "prompt": selectedShortcut == 14 ? Config.getExplanationPrompt(text) : Config.getSummarizePrompt(text),
+            "model": AIConfig.model,
+            "prompt": selectedShortcut == 14 ? AIConfig.getExplanationPrompt(text) : AIConfig.getSummarizePrompt(text),
             "stream": true,
             "options": [
                 "temperature": 0.5,
@@ -60,9 +60,9 @@ struct OllamaService {
     }
     
     
-    func reviseText(_ text: String) async throws -> String {
-        print("🟢 [OLLAMA] Starting reviseText")
-        guard let url = URL(string: Config.ollamaURL) else {
+    func generateText(_ text: String, _ prompt: String, jsonSchema: [String: Any]? = nil) async throws -> String {
+        print("🟢 [OLLAMA] Starting generation of text")
+        guard let url = URL(string: AIConfig.ollamaURL) else {
             throw NSError(domain: "Invalid URL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid Ollama URL"])
         }
 
@@ -72,14 +72,18 @@ struct OllamaService {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
         // Force NON-streaming for revise text since we need the complete result before pasting
-        let requestBody: [String: Any] = [
-            "model": Config.model,
-            "prompt": Config.getRevisionPrompt(text),
+        var requestBody: [String: Any] = [
+            "model": AIConfig.model,
+            "prompt": prompt,
             "stream": false,
             "options": [
                 "num_ctx": 512  // minimal context window for speed
             ]
         ]
+
+        if let schema = jsonSchema {
+            requestBody["format"] = schema
+        }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         print("🟢 [OLLAMA] Sending request to \(url)")
@@ -125,67 +129,40 @@ struct OllamaService {
     }
     
     
+    func generateRevisedText(_ text: String) async throws -> String {
+        let responseText = try await generateText(text, AIConfig.getRevisionPrompt(text))
+        return responseText
+    }
     
-    func explainText(_ text: String) async throws -> String {
-        guard let url = URL(string: Config.ollamaURL) else {
-            throw NSError(domain: "Invalid URL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid Ollama URL"])
-        }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 30
-
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-        
-        // Create the request body
-        let requestBody: [String: Any] = [
-            "model": Config.model,
-            "prompt": Config.getExplanationPrompt(text),
-            "stream": Config.stream,
-            "options": [
-                "temperature": 0.7,
-                "num_ctx": 512,
-                "num_predict": 200
-            ]
+    func generateCustomText(userPrompt: String, text: String) async throws -> (type: String, response: String) {
+        // Define JSON schema for the response
+        let jsonSchema: [String: Any] = [
+            "type": "object",
+            "properties": [
+                "type": [
+                    "type": "string",
+                    "enum": ["question", "generate"]
+                ],
+                "response": [
+                    "type": "string"
+                ]
+            ],
+            "required": ["type", "response"]
         ]
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        }
-        catch {
-            throw NSError(domain: "JSON Error", code: -1)
+
+        let responseText = try await generateText(text, AIConfig.getCustomPrompt(userPrompt: userPrompt, text: text), jsonSchema: jsonSchema)
+
+        // The response contains JSON, parse it
+        guard let data = responseText.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+              let type = json["type"],
+              let response = json["response"] else {
+            print("🔴 [OLLAMA] Failed to parse custom text response")
+            throw NSError(domain: "Parse error", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to parse JSON response"])
         }
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(
-                domain: "Invalid response",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response"]
-            )
-        }
-
-        guard httpResponse.statusCode == 200 else {
-            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw NSError(
-                domain: "Ollama Error",
-                code: httpResponse.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: "HTTP \(httpResponse.statusCode): \(errorMessage)"]
-            )
-        }
-
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let responseText = json["response"] as? String else {
-            throw NSError(
-                domain: "Parse Error",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to parse response"]
-            )
-        }
-
-        return responseText.trimmingCharacters(in: .whitespacesAndNewlines)
+        print("🟢 [OLLAMA] Custom text type: \(type), response: \(response.prefix(50))...")
+        return (type: type, response: response)
     }
 }

@@ -5,7 +5,7 @@ struct OverlayView: View {
     let selectedText: String
     let selectedShortcut: Int
     let onClose: () -> Void
-
+    @State private var previousText: String = ""
     @State private var explanation: String = ""
     @State private var isLoading: Bool = true
     @State private var hasError: Bool = false
@@ -113,6 +113,12 @@ struct OverlayView: View {
     }
 
     private func startFetching() {
+        
+        
+        /// if previous text was the same as selected text, we don't want to regenerate.
+        if selectedText == previousText {
+            return
+        }
         fetchTask?.cancel()
 
         isLoading = true
@@ -120,11 +126,12 @@ struct OverlayView: View {
         fetchTask = Task {
             await fetchExplanation()
         }
+        previousText = selectedText
     }
 
     private func fetchExplanation() async {
         let service = OllamaService()
-
+    
         do {
             
             // Streaming: update UI as each chunk arrives
@@ -133,23 +140,23 @@ struct OverlayView: View {
                 print("🔵 [OVERLAY] Starting revision workflow for shortcut 13")
                 do {
                     print("🔵 [OVERLAY] Calling reviseText...")
-                    let result = try await service.reviseText(selectedText)
+                    let result = try await service.generateRevisedText(selectedText)
                     print("🔵 [OVERLAY] Got result: \(result.prefix(50))...")
-
+                    
                     // Create a detached task that won't be cancelled when window closes
                     Task.detached {
                         print("🔵 [DETACHED] Starting paste workflow")
-
+                        
                         // Close the overlay first to restore focus
                         await MainActor.run {
                             print("🔵 [DETACHED] Closing overlay window")
                             self.onClose()
                         }
-
+                        
                         // Wait for window to close and focus to shift
                         print("🔵 [DETACHED] Waiting 200ms for focus shift...")
                         try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
-
+                        
                         // Now paste on main thread
                         await MainActor.run {
                             print("🔵 [DETACHED] Calling pasteGeneratedText")
@@ -170,36 +177,28 @@ struct OverlayView: View {
             }
             
             
-            if Config.stream {
+            if AIConfig.stream {
                 // Clear "Thinking..." before streaming starts
                 
                 print(self.isLoading)
                 print(self.explanation)
-
-
+                
+                
                 try await service.generateTextWithStreaming(selectedText,selectedShortcut, onStreamStart: { self.isLoading = false}) { chunk in
                     print(self.explanation);
                     self.explanation += chunk};
                 
             } else {
                 // Non-streaming: get complete response
-                let result = try await service.explainText(selectedText)
-
-                guard !Task.isCancelled else { return }
-
-                await MainActor.run {
-                    self.explanation = result
-                    self.isLoading = false
-                }
-            }
-            print("FINAL EXPLANATION:", self.explanation)
-        }
+                // we will always be streaming
+                print("we are not streaming in this case")
+            }}
         catch {
             guard !Task.isCancelled else { return }
 
             await MainActor.run {
                 self.hasError = true
-                self.explanation = "Unable to connect. Make sure Ollama is running:\n• ollama serve\n• ollama pull \(Config.model)"
+                self.explanation = "Unable to connect. Make sure Ollama is running:\n• ollama serve\n• ollama pull \(AIConfig.model)"
                 self.isLoading = false
             }
         }

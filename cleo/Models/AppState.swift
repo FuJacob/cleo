@@ -61,9 +61,8 @@ class AppState: ObservableObject {
     // MARK: - Keyboard Monitoring
 
     private func setupKeyboardMonitor() {
-        let validKeyCodes = Set([14,13, 1])
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.modifierFlags.contains([.command, .control]) && validKeyCodes.contains(Int(event.keyCode)) {
+            if event.modifierFlags.contains([.command, .control]) && ShortcutsConfig.avaliableShortcuts.contains(Int(event.keyCode)) {
                 self?.handleShortcut(keyCode: Int(event.keyCode))
             }
         }
@@ -71,8 +70,12 @@ class AppState: ObservableObject {
 
     func handleShortcut(keyCode: Int) {
         print("Shortcut detected!")
-        
+
         selectedShortcut = keyCode
+
+        // Determine which window to open based on shortcut
+        let windowId: String = (keyCode == 0) ? "promptOverlay" : "overlay"
+
         if let text = ClipboardService.getSelectedText(), !text.isEmpty {
             print("Selected text: \(text)")
 
@@ -81,27 +84,27 @@ class AppState: ObservableObject {
                 print("Same text - just toggling visibility")
                 // Same text - just toggle window (don't regenerate)
                 if isWindowVisible {
-                    closeOverlay()
+                    closeOverlay(windowId)
                 } else {
-                    openOverlayWindow()
+                    openOverlayWindow(windowId)
                     isWindowVisible = true
                 }
             } else {
                 // New text - close old window and show new one with fresh explanation
                 print("New text - generating new explanation")
-                closeOverlay()
-                showOverlay(with: text)
+                closeOverlay(windowId)
+                showOverlay(with: text, windowId: windowId)
                 isWindowVisible = true
             }
         } else {
             print("No text selected - toggling window visibility")
             // No text selected: toggle window visibility
             if isWindowVisible {
-                closeOverlay()
+                closeOverlay(windowId)
             } else {
                 // Reopen with last explanation if available
                 if selectedText != nil {
-                    openOverlayWindow()
+                    openOverlayWindow(windowId)
                     isWindowVisible = true
                 }
             }
@@ -110,31 +113,38 @@ class AppState: ObservableObject {
 
     // MARK: - Window Management
 
-    func showOverlay(with text: String) {
+    func showOverlay(with text: String, windowId: String) {
         DispatchQueue.main.async { [weak self] in
             self?.selectedText = text
-            self?.openOverlayWindow()
+            self?.openOverlayWindow(windowId)
         }
     }
 
-    func openOverlayWindow() {
+    func openOverlayWindow(_ windowId: String) {
         // Open the overlay window using SwiftUI's window management
-        openWindowAction?("overlay")
+        openWindowAction?(windowId)
 
         // Configure window appearance after opening
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "overlay" }) {
+            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == windowId }) {
                 window.level = .floating
                 window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
                 window.isMovableByWindowBackground = true
-                window.makeKeyAndOrderFront(nil)
+
+                // For promptOverlay, make sure it can accept key events
+                if windowId == "promptOverlay" {
+                    window.makeKeyAndOrderFront(nil)
+                    window.makeFirstResponder(window.contentView)
+                } else {
+                    window.makeKeyAndOrderFront(nil)
+                }
             }
         }
     }
 
-    func closeOverlay() {
+    func closeOverlay(_ windowId: String) {
         DispatchQueue.main.async { [weak self] in
-            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "overlay" }) {
+            if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == windowId }) {
                 window.close()
             }
             self?.isWindowVisible = false
